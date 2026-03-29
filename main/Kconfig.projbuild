@@ -1,0 +1,17 @@
+menu "MiniIO demo"
+
+config MINIIO_ROLE_SERVER
+    bool "Build as server node"
+    default y
+
+config MINIIO_LOCAL_NODE_ID
+    int "Local node ID"
+    range 1 127
+    default 17
+
+config MINIIO_REMOTE_NODE_ID
+    int "Remote node ID"
+    range 1 127
+    default 34
+
+endmenu

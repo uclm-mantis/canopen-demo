@@ -1,5 +1,7 @@
 dependencies:
   idf: ">=5.0"
   epos:
-    path: ../../epos
-    git: https://github.com/uclm-mantis/epos.git
+     path: ../../epos
+
+
+#    git: https://github.com/uclm-mantis/epos.git

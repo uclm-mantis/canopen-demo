@@ -1,149 +1,75 @@
-# CANopen demo project: custom protocol over CAN
+# MiniIO demo
 
-Small ESP-IDF example showing how to use this CANopen library to implement a **custom application protocol** on top of CANopen, using both:
+This demo shows the intended **simple everyday usage** after refactoring the library:
 
-- **SDO** for configuration/parameter access.
-- **PDO** for cyclic or event-driven process data.
-- **SDO server** to expose a custom object dictionary on one node.
-- **SDO client** and **PDO client helpers** on the other node.
+- the **library stays generic**,
+- the **application owns the object dictionary**,
+- the application generates:
+  - typed **SDO client** getters/setters,
+  - the **SDO server OD table**,
+  - protocol-specific callbacks,
+- and the application uses the generic **PDO API** directly.
 
-The example is intentionally small and uses a toy protocol called **MiniIO**.
+## What it demonstrates
 
-## Demo topology
+### Server node
 
-Use two ESP32 boards connected to the same CAN bus:
+- Starts a generic SDO server with:
 
-- **Server node**: Node-ID `0x0A`
-- **Client node**: Node-ID `0x01`
-
-Both run the same CANopen core library. The difference is only the application built on top.
-
-## MiniIO protocol
-
-The server exposes these custom CANopen objects:
-
-| Index  | Sub | Name               | Type    | Access | Purpose |
-|--------|-----|--------------------|---------|--------|---------|
-| 0x2000 | 0   | `device_mode`      | `u8`    | RW     | Working mode selected by client via SDO |
-| 0x2001 | 0   | `target_value`     | `i32`   | RW     | Desired setpoint written by client via SDO or RPDO |
-| 0x2002 | 0   | `actual_value`     | `i32`   | RO     | Current simulated process value |
-| 0x2003 | 0   | `status_flags`     | `u16`   | RO     | Bit flags published in TPDO |
-| 0x2004 | 0   | `sample_counter`   | `u32`   | RO     | Increments periodically |
-
-### SDO usage in the demo
-
-The client uses SDO to:
-
-1. Set `device_mode`
-2. Set an initial `target_value`
-3. Read back `actual_value`
-4. Read back `status_flags`
-
-### PDO usage in the demo
-
-The demo configures:
-
-- **RPDO1** on the server side to receive `target_value` (`0x2001:0`, `i32`)
-- **TPDO1** on the server side to publish:
-  - `actual_value` (`0x2002:0`, `i32`)
-  - `status_flags` (`0x2003:0`, `u16`)
-
-The client then:
-
-- sends new targets using `canopen_pdo_send()`
-- subscribes to TPDO1 using `canopen_pdo_subscribe()`
-
-## File layout
-
-```text
-canopen_demo_project/
-├── CMakeLists.txt
-├── sdkconfig.defaults
-└── main/
-    ├── CMakeLists.txt
-    ├── miniio_protocol.h
-    ├── miniio_client_od.h
-    ├── miniio_server_od.h
-    ├── miniio_server_callbacks.c
-    ├── miniio_server_callbacks.h
-    ├── canopen_pdo_compat.h
-    ├── server_main.c
-    └── client_main.c
+```c
+canopen_server_t server = {0};
+canopen_server_start(&server, LOCAL_NODE_ID, miniio_server_od, miniio_server_od_len);
 ```
 
-## Important note about the current library state
+- Exposes a custom OD:
+  - `0x2000:00` command counter
+  - `0x2001:00` LED command
+  - `0x2002:00` telemetry value
+  - `0x2003:00` heartbeat period
 
-In the code snapshot you shared, the PDO helper implementation exists in `canopen.c`, but the corresponding declarations are not yet present in the public `canopen.h`. Because of that, this example includes a local compatibility header:
+- Configures and publishes TPDO1 with:
+  - command counter
+  - telemetry value
 
-- `main/canopen_pdo_compat.h`
+### Client node
 
-Once the public header is updated, that file can be removed and the application can include only `canopen.h` / `canopen_client.h` / `canopen_server.h`.
+- Uses generated typed SDO functions such as:
+  - `set_led_command()`
+  - `get_led_command()`
+  - `get_telemetry_value()`
 
-## How to build
+- Uses low-level SDO too:
+  - `sdo_download()`
+  - `sdo_upload()`
 
-### 1. Put the CANopen library in `components/epos`
+- Configures remote RPDO1
+- Sends RPDO1
+- Subscribes to remote TPDO1
 
-For example:
+## Build modes
 
-```bash
-git submodule add https://github.com/uclm-mantis/epos.git components/epos
+Use menuconfig or edit defaults:
+
+- **Server**:
+  - `CONFIG_MINIIO_ROLE_SERVER=y`
+  - `CONFIG_MINIIO_LOCAL_NODE_ID=17`
+
+- **Client**:
+  - `CONFIG_MINIIO_ROLE_SERVER=n`
+  - `CONFIG_MINIIO_LOCAL_NODE_ID=34`
+  - `CONFIG_MINIIO_REMOTE_NODE_ID=17`
+
+## Dependency on `epos`
+
+The demo includes `main/idf_component.yml` with a Git dependency.
+
+For local development you can replace it with a path dependency:
+
+```yaml
+dependencies:
+  idf: ">=5.0"
+  epos:
+    path: ../../epos
 ```
 
-### 2. Build either the server or the client app
-
-This demo provides **two alternative `app_main()` files**. Build one at a time.
-
-#### Server build
-
-Rename or select:
-
-- `server_main.c` as the active `app_main()`
-- exclude `client_main.c`
-
-#### Client build
-
-Rename or select:
-
-- `client_main.c` as the active `app_main()`
-- exclude `server_main.c`
-
-A simple way is to keep one file named `app_main.c` and the other renamed to `*.off`.
-
-## Server behaviour
-
-The server:
-
-- initializes CANopen
-- starts an SDO server for node `0x0A`
-- keeps a small simulated plant running:
-  - `actual_value` moves gradually toward `target_value`
-  - `sample_counter` increments every cycle
-  - `status_flags` reflects simple state bits
-- emits TPDO1 periodically with `actual_value` and `status_flags`
-
-## Client behaviour
-
-The client:
-
-- initializes CANopen
-- configures server RPDO1 and TPDO1 through SDO using `canopen_pdo_configure()`
-- writes initial configuration through generated SDO client functions
-- subscribes to TPDO1
-- periodically changes the remote target using RPDO1
-- prints TPDO updates as they arrive
-
-## Suggested CAN wiring
-
-- shared CANH/CANL
-- common ground
-- one 120 ohm terminator at each bus end
-
-## Why this demo is useful
-
-It demonstrates the intended layering:
-
-- **TWAI/CAN**: transport only
-- **CANopen core**: SDO, NMT, PDO, handlers, wait primitives
-- **application protocol**: your own object dictionary and your own data model
-
-That is exactly the pattern you need for protocols such as RAFT or any other custom distributed service.
+That is the recommended setup while iterating on the library and the demo side by side.

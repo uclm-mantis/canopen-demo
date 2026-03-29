@@ -1,101 +1,52 @@
 #include "miniio_server_callbacks.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include "miniio_protocol.h"
+static uint32_t g_command_counter = 0;
+static uint8_t  g_led_command = 0;
+static int32_t  g_telemetry_value = 1234;
+static uint16_t g_heartbeat_period = 500;
 
-typedef struct {
-    uint8_t device_mode;
-    int32_t target_value;
-    int32_t actual_value;
-    uint16_t status_flags;
-    uint32_t sample_counter;
-} miniio_model_t;
-
-static miniio_model_t g_model;
-
-void miniio_server_model_init(void)
+canopen_od_status_t on_get_command_counter(uint32_t *value)
 {
-    memset(&g_model, 0, sizeof(g_model));
-    g_model.device_mode = 1;
-    g_model.status_flags = MINIIO_STATUS_READY | MINIIO_STATUS_AT_TARGET;
+    *value = g_command_counter;
+    return CANOPEN_OD_OK;
 }
 
-void miniio_server_model_step(void)
+canopen_od_status_t on_get_led_command(uint8_t *value)
 {
-    int32_t err = g_model.target_value - g_model.actual_value;
+    *value = g_led_command;
+    return CANOPEN_OD_OK;
+}
 
-    if (err > 10) {
-        g_model.actual_value += 10;
-    } else if (err < -10) {
-        g_model.actual_value -= 10;
-    } else {
-        g_model.actual_value = g_model.target_value;
+canopen_od_status_t on_set_led_command(uint8_t value)
+{
+    g_led_command = value;
+    ++g_command_counter;
+    return CANOPEN_OD_OK;
+}
+
+canopen_od_status_t on_get_telemetry_value(int32_t *value)
+{
+    *value = g_telemetry_value;
+    return CANOPEN_OD_OK;
+}
+
+canopen_od_status_t on_set_telemetry_value(int32_t value)
+{
+    g_telemetry_value = value;
+    return CANOPEN_OD_OK;
+}
+
+canopen_od_status_t on_get_heartbeat_period(uint16_t *value)
+{
+    *value = g_heartbeat_period;
+    return CANOPEN_OD_OK;
+}
+
+canopen_od_status_t on_set_heartbeat_period(uint16_t value)
+{
+    if (value < 50) {
+        return CANOPEN_OD_INVALID_VALUE;
     }
-
-    g_model.sample_counter++;
-
-    g_model.status_flags = MINIIO_STATUS_READY;
-    if (g_model.actual_value != g_model.target_value) {
-        g_model.status_flags |= MINIIO_STATUS_TRACKING;
-    } else {
-        g_model.status_flags |= MINIIO_STATUS_AT_TARGET;
-    }
-}
-
-int32_t miniio_server_get_actual(void)
-{
-    return g_model.actual_value;
-}
-
-uint16_t miniio_server_get_status(void)
-{
-    return g_model.status_flags;
-}
-
-uint32_t miniio_server_get_counter(void)
-{
-    return g_model.sample_counter;
-}
-
-canopen_od_status_t on_get_device_mode(uint8_t *value)
-{
-    *value = g_model.device_mode;
-    return CANOPEN_OD_OK;
-}
-
-canopen_od_status_t on_set_device_mode(uint8_t value)
-{
-    g_model.device_mode = value;
-    return CANOPEN_OD_OK;
-}
-
-canopen_od_status_t on_get_target_value(int32_t *value)
-{
-    *value = g_model.target_value;
-    return CANOPEN_OD_OK;
-}
-
-canopen_od_status_t on_set_target_value(int32_t value)
-{
-    g_model.target_value = value;
-    return CANOPEN_OD_OK;
-}
-
-canopen_od_status_t on_get_actual_value(int32_t *value)
-{
-    *value = g_model.actual_value;
-    return CANOPEN_OD_OK;
-}
-
-canopen_od_status_t on_get_status_flags(uint16_t *value)
-{
-    *value = g_model.status_flags;
-    return CANOPEN_OD_OK;
-}
-
-canopen_od_status_t on_get_sample_counter(uint32_t *value)
-{
-    *value = g_model.sample_counter;
+    g_heartbeat_period = value;
     return CANOPEN_OD_OK;
 }

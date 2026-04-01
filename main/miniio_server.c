@@ -1,4 +1,4 @@
-#include "miniio_server_callbacks.h"
+#include "miniio_server.h"
 
 static uint32_t g_command_counter = 0;
 static uint8_t  g_led_command = 0;
@@ -50,3 +50,12 @@ canopen_od_status_t on_set_heartbeat_period(uint16_t value)
     g_heartbeat_period = value;
     return CANOPEN_OD_OK;
 }
+
+
+MINIIO_OD(OBJ_SERVER_DEFINE)
+
+const canopen_server_od_entry_t miniio_server_od[] = {
+    MINIIO_OD(OBJ_SERVER_OD_ENTRY)
+};
+
+const size_t miniio_server_od_len = sizeof(miniio_server_od) / sizeof(miniio_server_od[0]);

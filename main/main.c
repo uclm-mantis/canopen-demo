@@ -3,11 +3,9 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 
-#include "canopen.h"
-#include "canopen_server.h"
-#include "miniio_client_api.h"
-#include "miniio_server_callbacks.h"
-#include "miniio_server_od.h"
+
+#include "miniio_client.h"
+#include "miniio_server.h"
 
 static const char *TAG = "MINIIO_DEMO";
 
@@ -132,7 +130,12 @@ static void client_task(void *arg)
 
 void app_main(void)
 {
+    ESP_LOGI(TAG, "Starting MINIIO demo, local node ID=0x%02x remote node ID=0x%02x",
+             CONFIG_MINIIO_LOCAL_NODE_ID, CONFIG_MINIIO_REMOTE_NODE_ID);
     canopen_init_cfg_t cfg = canopen_init_default();
+    cfg.can_rx_pin = 20;
+    cfg.can_tx_pin = 21;
+
     CANOPEN_ERROR_CHECK(canopen_initialize(&cfg));
 
 #if CONFIG_MINIIO_ROLE_SERVER

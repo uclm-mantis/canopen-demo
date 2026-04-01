@@ -31,6 +31,42 @@ canopen_server_start(&server, LOCAL_NODE_ID, miniio_server_od, miniio_server_od_
   - command counter
   - telemetry value
 
+## Console commands
+
+The demo adds console commands available via the UART/USB monitor.
+
+- Start the SDO server:
+
+```sh
+server start
+```
+
+- Start transmitting TPDO to a destination node:
+
+```sh
+tpdo start <dest_node>
+```
+
+- Stop TPDO transmission:
+
+```sh
+tpdo stop
+```
+```
+- Start receiving and dumping RPDO1 for the local node:
+
+```sh
+rpdo start
+```
+
+- Stop RPDO reception:
+
+```sh
+rpdo stop
+```
+
+> The local `node_id` is printed to the serial monitor. It is derived from the device MAC: `esp_read_mac(mac, ESP_MAC_WIFI_STA)` is called and the last byte is masked with `mac[5] & 0x7F`. If the result is `0`, it is replaced with `1`.
+
 ## Dependency on `epos`
 
 The demo includes `main/idf_component.yml` with a Git dependency.

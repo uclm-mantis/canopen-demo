@@ -31,34 +31,6 @@ canopen_server_start(&server, LOCAL_NODE_ID, miniio_server_od, miniio_server_od_
   - command counter
   - telemetry value
 
-### Client node
-
-- Uses generated typed SDO functions such as:
-  - `set_led_command()`
-  - `get_led_command()`
-  - `get_telemetry_value()`
-
-- Uses low-level SDO too:
-  - `sdo_download()`
-  - `sdo_upload()`
-
-- Configures remote RPDO1
-- Sends RPDO1
-- Subscribes to remote TPDO1
-
-## Build modes
-
-Use menuconfig or edit defaults:
-
-- **Server**:
-  - `CONFIG_MINIIO_ROLE_SERVER=y`
-  - `CONFIG_MINIIO_LOCAL_NODE_ID=17`
-
-- **Client**:
-  - `CONFIG_MINIIO_ROLE_SERVER=n`
-  - `CONFIG_MINIIO_LOCAL_NODE_ID=34`
-  - `CONFIG_MINIIO_REMOTE_NODE_ID=17`
-
 ## Dependency on `epos`
 
 The demo includes `main/idf_component.yml` with a Git dependency.

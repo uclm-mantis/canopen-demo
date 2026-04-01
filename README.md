@@ -52,7 +52,7 @@ tpdo start <dest_node>
 ```sh
 tpdo stop
 ```
-```
+
 - Start receiving and dumping RPDO1 for the local node:
 
 ```sh

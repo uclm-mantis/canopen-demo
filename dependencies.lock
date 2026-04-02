@@ -1,12 +1,9 @@
 dependencies:
   epos:
-    component_hash: 
-      e36ae041b506083663ab3b6a7e7e4b86fc6db010839592a8f21d28624166918a
     dependencies: []
     source:
-      git: https://github.com/uclm-mantis/epos.git
-      path: .
-      type: git
+      path: ..\epos
+      type: local
     targets:
     - esp32
     - esp32c3
@@ -15,14 +12,14 @@ dependencies:
     - esp32s3
     - esp32h2
     - esp32p4
-    version: 740cc430c6b64111fc85c3b8fa21f4a55dbe2ed6
+    version: 1.0.0
   idf:
     source:
       type: idf
-    version: 5.5.2
+    version: 6.0.0
 direct_dependencies:
 - epos
 - idf
-manifest_hash: 25519c1eb5d044e2c06a4c06fc81ddcbe71cfdb6e829a1e17aa557f953a1042d
+manifest_hash: b0b9c7c0d6635c024df4159fbf407523d118ba8384e460365d5eef4d1a869172
 target: esp32c3
-version: 2.0.0
+version: 3.0.0

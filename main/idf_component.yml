@@ -1,7 +1,5 @@
 dependencies:
-  idf: ">=5.0"
+  idf: ">=6.0"
   epos:
-    path: ../../epos
-
-#    git: https://github.com/uclm-mantis/epos.git
-#    version: idf6
+    git: https://github.com/uclm-mantis/epos.git
+    version: idf6

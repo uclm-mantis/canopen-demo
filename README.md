@@ -1,6 +1,6 @@
 # MiniIO demo
 
-This demo shows the intended **simple everyday usage** after refactoring the library:
+This demo shows the intended **simple everyday usage** after refactoring the [EPOS-CAN](https://github.com/uclm-mantis/epos) library:
 
 - the **library stays generic**,
 - the **application owns the object dictionary**,
@@ -12,7 +12,7 @@ This demo shows the intended **simple everyday usage** after refactoring the lib
 
 ## What it demonstrates
 
-### Server node
+The demo starts a simple console based application in at least two nodes.  The command line interpreter allows to
 
 - Starts a generic SDO server with:
 
